@@ -15,10 +15,27 @@
       "codeLocation": "app/CustomerAssistantAgent/",
       "runtimeVersion": "PYTHON_3_14",
       "networkMode": "PUBLIC",
-      "protocol": "HTTP"
+      "protocol": "HTTP",
+      "envVars": [
+        { "name": "AGENTCORE_MEMORY_ID", "value": "AgentCoreProject_CustomerAssistantMemory-gqfbPw4X3P" },
+        { "name": "AWS_REGION", "value": "us-west-2" }
+      ]
     }
   ],
-  "memories": [],
+  "memories": [
+    {
+      "name": "CustomerAssistantMemory",
+      "eventExpiryDuration": 7,
+      "strategies": [
+        {
+          "type": "USER_PREFERENCE",
+          "name": "PreferenceLearner",
+          "description": "Learns and stores administrator-stated customer preferences (e.g. communication channel, favorite product category) across sessions.",
+          "namespaceTemplates": ["/users/{actorId}/preference/"]
+        }
+      ]
+    }
+  ],
   "knowledgeBases": [],
   "credentials": [],
   "evaluators": [],
