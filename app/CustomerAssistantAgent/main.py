@@ -42,7 +42,13 @@ Use tools when appropriate.
 # so actor_id defaults to a fixed value rather than being derived per-request.
 DEFAULT_ACTOR_ID: str = "administrator"
 AWS_REGION: str = os.environ.get("AWS_REGION", "us-west-2")
-AGENTCORE_MEMORY_ID: str | None = os.environ.get("AGENTCORE_MEMORY_ID")
+# AgentCore CLI 1.0 binds each memory to the runtime and injects its ID as
+# AGENTCORE_MEMORY_<NAME>_ID (and grants the execution role access to that exact
+# memory), so we read it instead of hard-coding an ID that changes if the memory is
+# recreated. AGENTCORE_MEMORY_ID is kept as a fallback for local development.
+AGENTCORE_MEMORY_ID: str | None = os.environ.get(
+    "AGENTCORE_MEMORY_CUSTOMERASSISTANTMEMORY_ID"
+) or os.environ.get("AGENTCORE_MEMORY_ID")
 
 # Namespace template for the USER_PREFERENCE strategy configured on
 # CustomerAssistantMemory (see agentcore/agentcore.json). This is the raw

@@ -1,7 +1,6 @@
 {
-  "$schema": "https://schema.agentcore.aws.dev/v1/agentcore.json",
   "name": "AgentCoreProject",
-  "version": 1,
+  "version": 2,
   "managedBy": "CDK",
   "tags": {
     "agentcore:created-by": "agentcore-cli",
@@ -17,7 +16,6 @@
       "networkMode": "PUBLIC",
       "protocol": "HTTP",
       "envVars": [
-        { "name": "AGENTCORE_MEMORY_ID", "value": "AgentCoreProject_CustomerAssistantMemory-gqfbPw4X3P" },
         { "name": "AWS_REGION", "value": "us-west-2" }
       ]
     }
@@ -43,9 +41,6 @@
   "agentCoreGateways": [],
   "policyEngines": [],
   "configBundles": [],
-  "abTests": [],
   "harnesses": [],
-  "datasets": [],
-  "capacityProviders": [],
   "payments": []
 }

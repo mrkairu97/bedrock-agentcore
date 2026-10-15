@@ -1,7 +1,10 @@
 {
   "targets": {
     "default": {
+      "stackArn": "arn:aws:cloudformation:us-west-2:505930914332:stack/AgentCore-AgentCoreProject-default/2abfa1e0-c7a1-11f1-bc98-023e0f368e69",
       "resources": {
+        "credentials": {},
+        "stackName": "AgentCore-AgentCoreProject-default",
         "runtimes": {
           "CustomerAssistantAgent": {
             "runtimeId": "AgentCoreProject_CustomerAssistantAgent-3eyUZ39OEX",
@@ -15,7 +18,6 @@
             "memoryArn": "arn:aws:bedrock-agentcore:us-west-2:505930914332:memory/AgentCoreProject_CustomerAssistantMemory-gqfbPw4X3P"
           }
         },
-        "stackName": "AgentCore-AgentCoreProject-default",
         "deployHash": "852fdcfa45133af5"
       }
     }
