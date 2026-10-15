@@ -1,0 +1,24 @@
+[
+  {
+    "name": "retrieve_policy",
+    "description": "Search the return policy knowledge base and return the most relevant policy excerpts with their source documents. Always pass the customer's country_code so only that country's policy is searched.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Natural-language question about the return policy, for example: return window for electronics."
+        },
+        "country_code": {
+          "type": "string",
+          "description": "Country whose policy applies. One of US, UK or IN. Use the customer's country_code from user_lookup."
+        },
+        "number_of_results": {
+          "type": "integer",
+          "description": "Optional. Maximum number of policy excerpts to return. Defaults to 5."
+        }
+      },
+      "required": ["query", "country_code"]
+    }
+  }
+]

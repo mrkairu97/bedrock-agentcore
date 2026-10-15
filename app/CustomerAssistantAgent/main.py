@@ -18,7 +18,7 @@ from strands_tools.current_time import current_time
 app = BedrockAgentCoreApp()
 log = app.logger
 
-# Define a Streamable HTTP MCP Client
+# MCP client for the AgentCore Gateway (Cognito OAuth handled in mcp_client/client.py)
 mcp_clients = [get_streamable_http_mcp_client()]
 
 DEFAULT_SYSTEM_PROMPT = """
@@ -32,6 +32,17 @@ Your job is to help administrators:
 - Check whether an order is eligible for return
 - Calculate refund amounts
 - Answer questions about return policies
+
+Tools: you can look up orders (order_lookup), customers (user_lookup), products (product_lookup)
+and return policies (retrieve_policy). The gateway prefixes these names with the target name,
+for example data-lookup___order_lookup. Order records only hold customer_id, product_id, status and
+purchase date, so use product_lookup for product details. Return policies differ by country (US, UK,
+IN): when a question is about a specific customer, call user_lookup first and pass that customer's
+country_code to retrieve_policy; otherwise use the country the administrator names.
+
+If a question has a part you can answer with a tool right away (for example a policy question that
+names a country and product type), answer that part first, then ask only for the details still missing
+(for example which customer's order the administrator means).
 
 Be helpful and concise. Always confirm the relevant details (order ID, customer, product,
 amount) with the administrator before taking any action to process a return or refund.
@@ -76,118 +87,8 @@ tools.append(add_numbers)
 tools.append(current_time)
 
 
-# ---------------------------------------------------------------------------
-# Mock data used by the dummy lookup/policy tools below. In a real deployment
-# these would be replaced by calls to a database, an AgentCore Gateway target,
-# or a Knowledge Base -- here they're inline dicts so the tool pattern is easy
-# to follow.
-# ---------------------------------------------------------------------------
-
-MOCK_ORDERS: dict[str, dict[str, str]] = {
-    "ORD-001": {
-        "customer_id": "C-01",
-        "product_id": "P-001",
-        "product_name": "iPhone 15 Pro",
-        "status": "DELIVERED",
-        "purchased": "5 days ago",
-    },
-    "ORD-002": {
-        "customer_id": "C-02",
-        "product_id": "P-003",
-        "product_name": "Kindle Paperwhite",
-        "status": "DELIVERED",
-        "purchased": "45 days ago",
-    },
-    "ORD-003": {
-        "customer_id": "C-01",
-        "product_id": "P-005",
-        "product_name": "PlayStation 5",
-        "status": "SHIPPED",
-        "purchased": "unknown",
-    },
-}
-
-MOCK_CUSTOMERS: dict[str, dict[str, str]] = {
-    "C-01": {"name": "Rajesh Kumar", "country": "IN", "email": "rajesh@example.com"},
-    "C-02": {"name": "Sarah Johnson", "country": "US", "email": "sarah@example.com"},
-    "C-03": {"name": "James Wilson", "country": "UK", "email": "james@example.com"},
-}
-
-MOCK_PRODUCTS: dict[str, dict[str, str]] = {
-    "P-001": {"name": "iPhone 15 Pro", "brand": "Apple", "category": "phone"},
-    "P-002": {"name": "Kindle Paperwhite", "brand": "Amazon", "category": "e-book"},
-    "P-003": {"name": "iPad Air", "brand": "Apple", "category": "tablet"},
-}
-
-MOCK_POLICIES: dict[str, dict[str, str]] = {
-    "electronics": {"return_window": "30-day return", "refund": "100% refund if unopened"},
-    "clothing": {"return_window": "60-day return", "refund": "full refund"},
-    "books": {"return_window": "14-day return", "refund": "50% refund"},
-}
-
-
-# Dummy @tool: looks up order details by order ID using the mock data above.
-@tool
-def order_lookup(order_id: str) -> str:
-    """Look up order details (customer, product, status, purchase date) by order ID."""
-    order = MOCK_ORDERS.get(order_id)
-    if order is None:
-        return f"No order found with ID '{order_id}'."
-    return (
-        f"Order {order_id}: customer {order['customer_id']}, "
-        f"product {order['product_id']} ({order['product_name']}), "
-        f"status {order['status']}, purchased {order['purchased']}."
-    )
-tools.append(order_lookup)
-
-
-# Dummy @tool: retrieves customer information by customer/user ID.
-@tool
-def user_lookup(user_id: str) -> str:
-    """Look up customer details (name, country, email) by customer/user ID."""
-    customer = MOCK_CUSTOMERS.get(user_id)
-    if customer is None:
-        return f"No customer found with ID '{user_id}'."
-    return (
-        f"Customer {user_id}: {customer['name']}, "
-        f"country {customer['country']}, email {customer['email']}."
-    )
-tools.append(user_lookup)
-
-
-# Dummy @tool: retrieves product information by product ID.
-@tool
-def product_lookup(product_id: str) -> str:
-    """Look up product details (name, brand, category) by product ID."""
-    product = MOCK_PRODUCTS.get(product_id)
-    if product is None:
-        return f"No product found with ID '{product_id}'."
-    return (
-        f"Product {product_id}: {product['name']} by {product['brand']}, "
-        f"category {product['category']}."
-    )
-tools.append(product_lookup)
-
-
-# Dummy @tool: retrieves return policy details. The real implementation would
-# likely query a Knowledge Base; here we match the query against a small set
-# of mock category policies by simple substring matching.
-@tool
-def policy_retrieval(query: str) -> str:
-    """Look up return policy details (return window, refund amount) by category keyword in the query."""
-    query_lower = query.lower()
-    for category, policy in MOCK_POLICIES.items():
-        if category in query_lower:
-            return (
-                f"Return policy for {category}: {policy['return_window']}, "
-                f"{policy['refund']}."
-            )
-    available = ", ".join(MOCK_POLICIES.keys())
-    return f"No policy found matching '{query}'. Available categories: {available}."
-tools.append(policy_retrieval)
-
-
-# Add MCP client to tools if available
+# Gateway tools (order_lookup, user_lookup, product_lookup, retrieve_policy) are discovered
+# at runtime from the AgentCore Gateway over MCP, so no local tool definitions are needed.
 for mcp_client in mcp_clients:
     if mcp_client:
         tools.append(mcp_client)
